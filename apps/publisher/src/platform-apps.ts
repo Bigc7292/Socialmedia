@@ -9,6 +9,7 @@ export const appEnvironment: Readonly<
   linkedin: { id: "LINKEDIN_CLIENT_ID", secret: "LINKEDIN_CLIENT_SECRET" },
   threads: { id: "THREADS_APP_ID", secret: "THREADS_APP_SECRET" },
   instagram: { id: "INSTAGRAM_APP_ID", secret: "INSTAGRAM_APP_SECRET" },
+  facebook: { id: "FACEBOOK_APP_ID", secret: "FACEBOOK_APP_SECRET" },
   tiktok: { id: "TIKTOK_CLIENT_KEY", secret: "TIKTOK_CLIENT_SECRET" },
   youtube: { id: "GOOGLE_CLIENT_ID", secret: "GOOGLE_CLIENT_SECRET" },
 };
@@ -20,8 +21,26 @@ export function linkedInApiVersion(env: Environment): string {
   return env["LINKEDIN_API_VERSION"] ?? "202609";
 }
 
+/** Graph API version for Facebook Page calls. */
+export function facebookGraphVersion(env: Environment): string {
+  return env["FACEBOOK_GRAPH_VERSION"] ?? "v25.0";
+}
+
 export function redirectUri(env: Environment): string {
   return env["OAUTH_REDIRECT_URI"] ?? "http://localhost:8787/callback";
+}
+
+/** API versions the platform adapters are pinned to. */
+export interface ApiVersions {
+  readonly linkedInApiVersion: string;
+  readonly facebookGraphVersion: string;
+}
+
+export function backendVersions(env: Environment): ApiVersions {
+  return {
+    linkedInApiVersion: linkedInApiVersion(env),
+    facebookGraphVersion: facebookGraphVersion(env),
+  };
 }
 
 /** OAuth client settings for connecting and refreshing one platform's accounts. */

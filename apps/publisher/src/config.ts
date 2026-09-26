@@ -17,6 +17,7 @@ export const publisherPlatforms = [
   "linkedin",
   "threads",
   "instagram",
+  "facebook",
   "tiktok",
   "youtube",
 ] as const;
@@ -40,6 +41,7 @@ interface AccountBase {
 
 export type AccountConfig =
   | (AccountBase & { readonly platform: "bluesky" })
+  | (AccountBase & { readonly platform: "facebook" })
   | (AccountBase & { readonly platform: "x" | "threads" | "instagram" })
   | (AccountBase & {
       readonly platform: "linkedin";
@@ -60,6 +62,8 @@ export type AccountConfig =
 export interface BrandConfig {
   readonly id: string;
   readonly name: string;
+  /** The app's public site. Also the default TikTok verified media origin. */
+  readonly website: string | undefined;
   readonly accounts: readonly AccountConfig[];
 }
 
@@ -107,7 +111,27 @@ function optionalBoolean(record: JsonRecord, key: string, where: string): boolea
   return value;
 }
 
-function parseAccount(value: JsonInput, brandId: string, where: string): AccountConfig {
+function parseWebsite(value: string | undefined, where: string): string | undefined {
+  if (value === undefined) return undefined;
+  let url: URL;
+
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${where}: website "${value}" is not a URL`);
+  }
+
+  if (url.protocol !== "https:") throw new Error(`${where}: website must use https`);
+
+  return url.origin;
+}
+
+function parseAccount(
+  value: JsonInput,
+  brandId: string,
+  website: string | undefined,
+  where: string,
+): AccountConfig {
   if (!isRecord(value)) throw new Error(`${where}: each account must be an object`);
   const id = checkId(requiredString(value, "id", where), where);
   const platform = requiredString(value, "platform", where);
@@ -145,7 +169,7 @@ function parseAccount(value: JsonInput, brandId: string, where: string): Account
 
       if (!isTikTokPrivacy(privacy))
         throw new Error(`${where}: privacy must be one of ${tiktokPrivacyLevels.join(", ")}`);
-      const origins = value["verifiedMediaOrigins"] ?? [];
+      const origins = value["verifiedMediaOrigins"] ?? (website === undefined ? [] : [website]);
 
       if (!isList(origins) || !origins.every(isString))
         throw new Error(`${where}: verifiedMediaOrigins must be a list of https origins`);
@@ -164,6 +188,7 @@ function parseBrand(value: JsonInput, index: number): BrandConfig {
   if (!isRecord(value)) throw new Error(`${where} must be an object`);
   const id = checkId(requiredString(value, "id", where), where);
   const name = optionalString(value, "name", where) ?? id;
+  const website = parseWebsite(optionalString(value, "website", where), where);
   const accounts = value["accounts"];
 
   if (!isList(accounts)) throw new Error(`${where}: "accounts" must be a list`);
@@ -171,8 +196,9 @@ function parseBrand(value: JsonInput, index: number): BrandConfig {
   return {
     id,
     name,
+    website,
     accounts: accounts.map((account, accountIndex) =>
-      parseAccount(account, id, `${where}.accounts[${accountIndex}]`),
+      parseAccount(account, id, website, `${where}.accounts[${accountIndex}]`),
     ),
   };
 }

@@ -41,7 +41,7 @@ export type StoredCredential = OAuthCredential | BlueskyCredential;
 export type EditableTokenSet = { -readonly [K in keyof OAuthTokenSet]: OAuthTokenSet[K] };
 
 function isOAuthPlatform(value: string): value is OAuthPlatform {
-  return ["x", "linkedin", "threads", "instagram", "tiktok", "youtube"].includes(value);
+  return ["x", "linkedin", "threads", "instagram", "facebook", "tiktok", "youtube"].includes(value);
 }
 
 function decodeToken(value: JsonInput | undefined, where: string): OAuthTokenSet {

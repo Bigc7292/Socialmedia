@@ -11,6 +11,8 @@ import { tiktok } from "@opencoredev/social-sdk/tiktok";
 import { x } from "@opencoredev/social-sdk/x";
 import { youtube } from "@opencoredev/social-sdk/youtube";
 import type { AccountConfig } from "./config.js";
+import { facebookPage } from "./facebook.js";
+import type { ApiVersions } from "./platform-apps.js";
 
 /** Live credentials for one account, already refreshed or logged in. */
 export type AccountAccess =
@@ -32,8 +34,7 @@ export interface AccountBackend {
   readonly ref: ConnectedAccountRef;
 }
 
-export interface BackendSettings {
-  readonly linkedInApiVersion: string;
+export interface BackendSettings extends ApiVersions {
   readonly fetch?: typeof fetch;
 }
 
@@ -102,6 +103,18 @@ export function accountBackend(
         ref: ref(accountId),
         adapter: youtube({ auth: { channelId: accountId, accessToken }, ...fetchOption }),
       };
+    case "facebook":
+      return {
+        account,
+        ref: ref(accountId),
+        adapter: facebookPage({
+          backend,
+          pageId: accountId,
+          accessToken,
+          graphVersion: settings.facebookGraphVersion,
+          ...fetchOption,
+        }),
+      };
     case "tiktok":
       return {
         account,
@@ -147,8 +160,13 @@ export function placeholderAccess(account: AccountConfig, knownAccountId?: strin
       accessJwt: "dry-run",
     };
 
-  const fallback =
-    account.platform === "linkedin" ? "urn:li:person:dryrun" : `dryrun-${account.id}`;
+  // Each platform checks the id's format, so the stand-in has to look real.
+  const fallbacks: Partial<Record<AccountConfig["platform"], string>> = {
+    linkedin: "urn:li:person:dryrun",
+    facebook: "1",
+  };
+
+  const fallback = fallbacks[account.platform] ?? `dryrun-${account.id}`;
 
   return {
     platform: account.platform,

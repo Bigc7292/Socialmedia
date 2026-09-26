@@ -1,4 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { createServer } from "node:http";
+import { connectedAccountRef } from "@opencoredev/social-sdk";
 import {
   ConnectionManager,
   MemoryConnectionStore,
@@ -15,7 +17,13 @@ import type {
   OAuthCredential,
   OAuthPlatform,
 } from "./credentials.js";
-import { oauthOptions, redirectUri, type Environment } from "./platform-apps.js";
+import { isList, isRecord, isString, parseJson, type JsonRecord } from "./guards.js";
+import {
+  facebookGraphVersion,
+  oauthOptions,
+  redirectUri,
+  type Environment,
+} from "./platform-apps.js";
 
 export interface Terminal {
   log(message: string): void;
@@ -112,9 +120,12 @@ function pickAccount(
   );
 }
 
+/** Platforms whose login the SDK's `oauthProvider` runs. */
+export type SdkOAuthPlatform = Exclude<OAuthPlatform, "facebook">;
+
 /** Run the platform's OAuth login in the browser and return the credential to store. */
 export async function connectOAuth(
-  account: AccountConfig & { readonly platform: OAuthPlatform },
+  account: AccountConfig & { readonly platform: SdkOAuthPlatform },
   env: Environment,
   terminal: Terminal,
   pick: string | undefined,
@@ -225,5 +236,145 @@ export async function connectBluesky(
     did: session.did,
     displayName: session.handle,
     updatedAt: now.toISOString(),
+  };
+}
+
+const facebookScopes = "pages_show_list,pages_read_engagement,pages_manage_posts";
+
+/** GET a Graph API object, or throw with Facebook's own error message. */
+async function graphGet(url: URL, fetcher: typeof fetch, bearer?: string): Promise<JsonRecord> {
+  const response = await fetcher(
+    url,
+    bearer === undefined ? {} : { headers: { authorization: `Bearer ${bearer}` } },
+  );
+
+  const text = await response.text();
+  let body: JsonRecord | undefined;
+
+  try {
+    const parsed = parseJson(text);
+
+    body = isRecord(parsed) ? parsed : undefined;
+  } catch {
+    body = undefined;
+  }
+
+  const error = body?.["error"];
+  const message = isRecord(error) ? error["message"] : undefined;
+
+  if (!response.ok || body === undefined)
+    throw new Error(
+      `Facebook ${url.pathname} failed (${response.status})${isString(message) ? `: ${message}` : ""}`,
+    );
+
+  return body;
+}
+
+function tokenFrom(body: JsonRecord, step: string): string {
+  const token = body["access_token"];
+
+  if (!isString(token) || token === "") throw new Error(`Facebook ${step} returned no token`);
+
+  return token;
+}
+
+/**
+ * Connect a Facebook Page: log in (or take a user token from the Graph API
+ * Explorer), swap it for a long-lived user token, then take the Page's own
+ * token, which does not expire.
+ */
+export async function connectFacebook(
+  account: AccountConfig & { readonly platform: "facebook" },
+  env: Environment,
+  terminal: Terminal,
+  pick: string | undefined,
+  userToken: string | undefined,
+  fetcher: typeof fetch = fetch,
+  now: () => Date = () => new Date(),
+): Promise<OAuthCredential> {
+  const { clientId, clientSecret } = oauthOptions("facebook", env);
+
+  if (clientSecret === undefined) throw new Error("Set FACEBOOK_APP_SECRET in apps/publisher/.env");
+  const version = facebookGraphVersion(env);
+  const graph = `https://graph.facebook.com/${version}`;
+  let shortToken = userToken;
+
+  if (shortToken === undefined) {
+    const redirect = new URL(redirectUri(env));
+    const state = randomUUID();
+    const authorization = new URL(`https://www.facebook.com/${version}/dialog/oauth`);
+
+    authorization.searchParams.set("client_id", clientId);
+    authorization.searchParams.set("redirect_uri", redirect.href);
+    authorization.searchParams.set("state", state);
+    authorization.searchParams.set("scope", facebookScopes);
+    authorization.searchParams.set("response_type", "code");
+    terminal.log(
+      `Open this link, sign in as an admin of the ${account.label} Page and approve access:\n\n${authorization.href}\n`,
+    );
+    const callback = new URL(await readCallback(redirect, terminal));
+
+    if (callback.origin !== redirect.origin || callback.pathname !== redirect.pathname)
+      throw new Error("That is not the redirect URL configured in OAUTH_REDIRECT_URI");
+
+    if (callback.searchParams.get("state") !== state)
+      throw new Error("The login state did not match; start connect again");
+    const code = callback.searchParams.get("code");
+
+    if (code === null)
+      throw new Error(
+        `Facebook did not approve the login: ${callback.searchParams.get("error_description") ?? "no code returned"}`,
+      );
+    const exchange = new URL(`${graph}/oauth/access_token`);
+
+    exchange.searchParams.set("client_id", clientId);
+    exchange.searchParams.set("client_secret", clientSecret);
+    exchange.searchParams.set("redirect_uri", redirect.href);
+    exchange.searchParams.set("code", code);
+    shortToken = tokenFrom(await graphGet(exchange, fetcher), "code exchange");
+  }
+
+  const longLived = new URL(`${graph}/oauth/access_token`);
+
+  longLived.searchParams.set("grant_type", "fb_exchange_token");
+  longLived.searchParams.set("client_id", clientId);
+  longLived.searchParams.set("client_secret", clientSecret);
+  longLived.searchParams.set("fb_exchange_token", shortToken);
+  const userLongToken = tokenFrom(await graphGet(longLived, fetcher), "long-lived token exchange");
+  const pagesUrl = new URL(`${graph}/me/accounts`);
+
+  pagesUrl.searchParams.set("fields", "id,name,access_token");
+  const pages = (await graphGet(pagesUrl, fetcher, userLongToken))["data"];
+
+  if (!isList(pages)) throw new Error("Facebook returned no Page list");
+  const pageTokens = new Map<string, string>();
+  const discovered: ConnectionAccount[] = [];
+
+  for (const page of pages) {
+    if (!isRecord(page)) continue;
+    const id = page["id"];
+    const name = page["name"];
+    const token = page["access_token"];
+
+    if (!isString(id) || !isString(token)) continue;
+    pageTokens.set(id, token);
+    discovered.push({
+      ref: connectedAccountRef({ backend: account.id, platform: "facebook", accountId: id }),
+      displayName: isString(name) ? name : id,
+    });
+  }
+
+  const chosen = pickAccount(account, discovered, pick);
+  const pageToken = pageTokens.get(chosen.ref.accountId);
+
+  if (pageToken === undefined) throw new Error("Facebook returned no token for that Page");
+
+  return {
+    kind: "oauth",
+    platform: "facebook",
+    accountId: chosen.ref.accountId,
+    displayName: chosen.displayName,
+    token: { accessToken: pageToken },
+    updatedAt: now().toISOString(),
   };
 }

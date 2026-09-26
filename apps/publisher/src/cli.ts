@@ -21,11 +21,17 @@ import {
   type AccountConfig,
   type PublisherPlatform,
 } from "./config.js";
-import { connectBluesky, connectOAuth, manualCredential, type Terminal } from "./connect.js";
+import {
+  connectBluesky,
+  connectFacebook,
+  connectOAuth,
+  manualCredential,
+  type Terminal,
+} from "./connect.js";
 import { CredentialFile, type StoredCredential } from "./credentials.js";
 import { isString } from "./guards.js";
 import { resolveMedia, type MediaRequest } from "./media.js";
-import { linkedInApiVersion } from "./platform-apps.js";
+import { backendVersions } from "./platform-apps.js";
 import {
   checkPlan,
   planTargets,
@@ -51,6 +57,7 @@ Usage (run inside apps/publisher):
 connect options:
   --pick <id>                 choose one of several accounts the login returned
   --access-token <token>      store a token made in the platform's dashboard instead of logging in
+  --user-token <token>        Facebook: start from a Graph API Explorer user token, skip the browser
   --account-id <id>           the platform account id that token belongs to
   --expires-in-days <n>       how long that token lasts (Threads/Instagram: 60)
   --handle <handle>           Bluesky handle, e.g. myapp.bsky.social
@@ -110,7 +117,7 @@ async function listAccounts(verify: boolean): Promise<void> {
           const backend = accountBackend(
             account,
             await liveAccess(account, credentials, process.env, now),
-            { linkedInApiVersion: linkedInApiVersion(process.env) },
+            backendVersions(process.env),
           );
 
           const social = createSocial({ backends: { [account.id]: backend.adapter } });
@@ -134,6 +141,7 @@ async function connect(argv: readonly string[]): Promise<void> {
       pick: { type: "string" },
       "access-token": { type: "string" },
       "account-id": { type: "string" },
+      "user-token": { type: "string" },
       "expires-in-days": { type: "string" },
       handle: { type: "string" },
       "app-password": { type: "string" },
@@ -178,7 +186,15 @@ async function connect(argv: readonly string[]): Promise<void> {
         days === undefined ? undefined : Number(days),
         new Date(),
       );
-    } else credential = await connectOAuth(account, process.env, io, values.pick);
+    } else if (account.platform === "facebook")
+      credential = await connectFacebook(
+        account,
+        process.env,
+        io,
+        values.pick,
+        values["user-token"],
+      );
+    else credential = await connectOAuth(account, process.env, io, values.pick);
     await credentials.set(account.id, credential);
     console.log(`Connected ${account.id} as ${credential.displayName}.`);
   } finally {
@@ -210,8 +226,8 @@ async function buildBackends(
   const credentials = await CredentialFile.open(`${dataDir}/credentials.json`);
 
   const settings = dryRun
-    ? { linkedInApiVersion: linkedInApiVersion(process.env), fetch: offlineFetch }
-    : { linkedInApiVersion: linkedInApiVersion(process.env) };
+    ? { ...backendVersions(process.env), fetch: offlineFetch }
+    : backendVersions(process.env);
 
   const backends: AccountBackend[] = [];
   const skipped: SkippedTarget[] = [];

@@ -38,6 +38,15 @@ export async function freshCredential(
 ): Promise<OAuthCredential> {
   if (!needsRefresh(credential, now)) return credential;
   const remaining = expiresInMs(credential, now) ?? 0;
+  const platform = credential.platform;
+
+  // Page tokens made from a long-lived user token do not expire; there is nothing to refresh.
+  if (platform === "facebook") {
+    if (remaining > 0) return credential;
+    throw new Error(
+      `The Facebook Page token for ${credential.displayName} has expired. Run connect again.`,
+    );
+  }
 
   const renewable =
     credential.token.refreshToken !== undefined ||
@@ -50,10 +59,10 @@ export async function freshCredential(
     );
   }
 
-  const options = oauthOptions(credential.platform, env);
+  const options = oauthOptions(platform, env);
 
   const token = await refreshOAuthToken(
-    credential.platform,
+    platform,
     fetcher === undefined ? options : { ...options, fetch: fetcher },
     credential.token,
   );

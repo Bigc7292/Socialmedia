@@ -12,6 +12,10 @@ export function isString(value: JsonInput | undefined): value is string {
   return typeof value === "string";
 }
 
+export function isNumber(value: JsonInput | undefined): value is number {
+  return typeof value === "number";
+}
+
 export function isBoolean(value: JsonInput | undefined): value is boolean {
   return typeof value === "boolean";
 }

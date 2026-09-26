@@ -32,6 +32,7 @@ const accounts: readonly AccountConfig[] = [
   { id: "app-one-x", brandId: "app-one", label: "X", platform: "x" },
   { id: "app-one-bluesky", brandId: "app-one", label: "Bluesky", platform: "bluesky" },
   { id: "app-one-instagram", brandId: "app-one", label: "Instagram", platform: "instagram" },
+  { id: "app-one-facebook", brandId: "app-one", label: "Facebook", platform: "facebook" },
   {
     id: "app-one-linkedin",
     brandId: "app-one",
@@ -45,6 +46,7 @@ function dryRunBackends(): readonly AccountBackend[] {
   return accounts.map((account) =>
     accountBackend(account, placeholderAccess(account), {
       linkedInApiVersion: "202609",
+      facebookGraphVersion: "v25.0",
       fetch: offlineFetch,
     }),
   );
@@ -72,7 +74,7 @@ test("a dry run validates against real platform rules and skips only the targets
 
   assert.deepEqual(
     checked.ready.map((item) => item.backend.account.id),
-    ["app-one-bluesky", "app-one-linkedin"],
+    ["app-one-bluesky", "app-one-facebook", "app-one-linkedin"],
   );
   assert.deepEqual(checked.skipped.map((item) => item.account.id).sort(), [
     "app-one-instagram",
@@ -196,7 +198,9 @@ function processingAdapter(backend: string, platform: "linkedin") {
 }
 
 test("LinkedIn media is uploaded before posting and a processing video is retried until it posts", async () => {
-  const account: AccountConfig = accounts[3] ?? assert.fail();
+  const account: AccountConfig =
+    accounts.find((item) => item.platform === "linkedin") ?? assert.fail();
+
   const fixture = processingAdapter(account.id, "linkedin");
 
   const backend: AccountBackend = {
