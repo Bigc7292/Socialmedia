@@ -89,15 +89,15 @@ test("a brand website becomes the default TikTok media origin", () => {
   );
 });
 
-test("the real brands file parses: four apps, five platforms each, no X", async () => {
+test("the real brands file parses: three apps, five platforms each, no X", async () => {
   const config = parsePublisherConfig(
     await readFile(new URL("../brands.json", import.meta.url), "utf8"),
   );
 
   assert.deepEqual(
     config.brands.map((brand) => brand.name),
-    ["StoneSight AI", "Discount Hunter AI", "Mr & Mrs Peptides", "Lintel AI"],
+    ["StoneSight AI", "Discount Hunter AI", "Mr & Mrs Peptides"],
   );
-  assert.equal(allAccounts(config).length, 20);
+  assert.equal(allAccounts(config).length, 15);
   assert.ok(allAccounts(config).every((account) => account.platform !== "x"));
 });
