@@ -89,35 +89,6 @@
           "visibility": "public"
         }
       ]
-    },
-    {
-      "id": "lintel-ai",
-      "name": "Lintel AI",
-      "accounts": [
-        {
-          "id": "lintel-instagram",
-          "platform": "instagram"
-        },
-        {
-          "id": "lintel-facebook",
-          "platform": "facebook"
-        },
-        {
-          "id": "lintel-tiktok",
-          "platform": "tiktok",
-          "privacy": "SELF_ONLY"
-        },
-        {
-          "id": "lintel-linkedin",
-          "platform": "linkedin",
-          "organization": true
-        },
-        {
-          "id": "lintel-youtube",
-          "platform": "youtube",
-          "visibility": "public"
-        }
-      ]
     }
   ]
 }

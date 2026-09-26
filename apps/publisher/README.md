@@ -21,7 +21,7 @@ From the repository root:
 bun install
 cd apps/publisher
 cp .env.example .env                 # then add your developer app keys
-# brands.json already lists StoneSight AI, Discount Hunter AI, Mr & Mrs Peptides and Lintel AI.
+# brands.json already lists StoneSight AI, Discount Hunter AI and Mr & Mrs Peptides.
 # brands.example.json shows every option.
 ```
 
