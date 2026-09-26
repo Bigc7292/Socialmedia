@@ -40,6 +40,17 @@
         "typescript": "^6.0.3",
       },
     },
+    "apps/publisher": {
+      "name": "socialmedia-publisher",
+      "dependencies": {
+        "@opencoredev/social-sdk": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^24.0.0",
+        "tsx": "^4.20.6",
+        "typescript": "^6.0.3",
+      },
+    },
     "packages/config": {
       "name": "@social-sdk/config",
       "version": "0.0.0",
@@ -2016,6 +2027,8 @@
     "slugify": ["slugify@1.6.9", "", {}, "sha512-vZ7rfeehZui7wQs438JXBckYLkIIdfHOXsaVEUMyS5fHo1483l1bMdo0EDSWYclY0yZKFOipDy4KHuKs6ssvdg=="],
 
     "smol-toml": ["smol-toml@1.8.0", "", {}, "sha512-kCZr2V3ch9i00x8zXRhjUNVcjG9ijES5dDudkXvUVCT5QlJNQWElSJdZqyPemffHoLNUYwOcou0Fy+ojN0uHSQ=="],
+
+    "socialmedia-publisher": ["socialmedia-publisher@workspace:apps/publisher"],
 
     "source-map": ["source-map@0.6.1", "", {}, "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g=="],
 

@@ -1,0 +1,47 @@
+{
+  "brands": [
+    {
+      "id": "app-one",
+      "name": "App One",
+      "accounts": [
+        { "id": "app-one-x", "platform": "x" },
+        { "id": "app-one-bluesky", "platform": "bluesky" },
+        { "id": "app-one-linkedin", "platform": "linkedin", "organization": true },
+        { "id": "app-one-threads", "platform": "threads" },
+        { "id": "app-one-instagram", "platform": "instagram" },
+        { "id": "app-one-youtube", "platform": "youtube", "visibility": "public" },
+        {
+          "id": "app-one-tiktok",
+          "platform": "tiktok",
+          "privacy": "SELF_ONLY",
+          "verifiedMediaOrigins": ["https://app-one.example.com"]
+        }
+      ]
+    },
+    {
+      "id": "app-two",
+      "name": "App Two",
+      "accounts": [
+        { "id": "app-two-x", "platform": "x" },
+        { "id": "app-two-bluesky", "platform": "bluesky" },
+        { "id": "app-two-linkedin", "platform": "linkedin", "organization": true }
+      ]
+    },
+    {
+      "id": "app-three",
+      "name": "App Three",
+      "accounts": [
+        { "id": "app-three-x", "platform": "x" },
+        { "id": "app-three-threads", "platform": "threads" }
+      ]
+    },
+    {
+      "id": "app-four",
+      "name": "App Four",
+      "accounts": [
+        { "id": "app-four-x", "platform": "x" },
+        { "id": "app-four-instagram", "platform": "instagram" }
+      ]
+    }
+  ]
+}
