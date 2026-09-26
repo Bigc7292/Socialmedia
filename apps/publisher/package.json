@@ -1,0 +1,18 @@
+{
+  "name": "socialmedia-publisher",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "social": "node --env-file-if-exists=.env --import tsx src/cli.ts",
+    "check-types": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tests.json",
+    "test": "node --import tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@opencoredev/social-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "brands": [
+    {
+      "id": "stonesight-ai",
+      "name": "StoneSight AI",
+      "website": "https://stonesightai.xyz",
+      "accounts": [
+        {
+          "id": "stonesight-instagram",
+          "platform": "instagram"
+        },
+        {
+          "id": "stonesight-facebook",
+          "platform": "facebook"
+        },
+        {
+          "id": "stonesight-tiktok",
+          "platform": "tiktok",
+          "privacy": "SELF_ONLY"
+        },
+        {
+          "id": "stonesight-linkedin",
+          "platform": "linkedin",
+          "organization": true
+        },
+        {
+          "id": "stonesight-youtube",
+          "platform": "youtube",
+          "visibility": "public"
+        }
+      ]
+    },
+    {
+      "id": "discount-hunter-ai",
+      "name": "Discount Hunter AI",
+      "website": "https://discounthunterai.xyz",
+      "accounts": [
+        {
+          "id": "discounthunter-instagram",
+          "platform": "instagram"
+        },
+        {
+          "id": "discounthunter-facebook",
+          "platform": "facebook"
+        },
+        {
+          "id": "discounthunter-tiktok",
+          "platform": "tiktok",
+          "privacy": "SELF_ONLY"
+        },
+        {
+          "id": "discounthunter-linkedin",
+          "platform": "linkedin",
+          "organization": true
+        },
+        {
+          "id": "discounthunter-youtube",
+          "platform": "youtube",
+          "visibility": "public"
+        }
+      ]
+    },
+    {
+      "id": "mr-and-mrs-peptides",
+      "name": "Mr & Mrs Peptides",
+      "website": "https://mr-and-mrs-peptides.vercel.app",
+      "accounts": [
+        {
+          "id": "mrmrspeptides-instagram",
+          "platform": "instagram"
+        },
+        {
+          "id": "mrmrspeptides-facebook",
+          "platform": "facebook"
+        },
+        {
+          "id": "mrmrspeptides-tiktok",
+          "platform": "tiktok",
+          "privacy": "SELF_ONLY"
+        },
+        {
+          "id": "mrmrspeptides-linkedin",
+          "platform": "linkedin",
+          "organization": true
+        },
+        {
+          "id": "mrmrspeptides-youtube",
+          "platform": "youtube",
+          "visibility": "public"
+        }
+      ]
+    },
+    {
+      "id": "lintel-ai",
+      "name": "Lintel AI",
+      "accounts": [
+        {
+          "id": "lintel-instagram",
+          "platform": "instagram"
+        },
+        {
+          "id": "lintel-facebook",
+          "platform": "facebook"
+        },
+        {
+          "id": "lintel-tiktok",
+          "platform": "tiktok",
+          "privacy": "SELF_ONLY"
+        },
+        {
+          "id": "lintel-linkedin",
+          "platform": "linkedin",
+          "organization": true
+        },
+        {
+          "id": "lintel-youtube",
+          "platform": "youtube",
+          "visibility": "public"
+        }
+      ]
+    }
+  ]
+}

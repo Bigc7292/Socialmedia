@@ -1,0 +1,3 @@
+# Tokens, app passwords and post history. Never commit these.
+.data/
+.env
